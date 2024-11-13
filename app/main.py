@@ -3,6 +3,7 @@ import uvicorn
 from .routers import articles
 from .database import engine, Base
 import asyncio
+from .scheduler import start_scheduler
 # Create all tables
 # Note: For async engine, you need to use an async context
 
@@ -19,3 +20,4 @@ async def startup():
         await conn.run_sync(Base.metadata.create_all)
         
 app.include_router(articles.router)
+scheduler = start_scheduler()

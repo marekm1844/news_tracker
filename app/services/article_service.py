@@ -7,14 +7,23 @@ from ..schemas.article import ArticleCreate
 from .parsers.parser_factory import ParserFactory
 from ..utils.diff_utils import compare_versions
 from sqlalchemy import select
+from ..exeptions.parser_error import ParsingError
+
 class ArticleService:
+    @staticmethod
+    def article_model():
+        return Article
+
+    @staticmethod
+    def article_version_model():
+        return ArticleVersion 
     @staticmethod
     async def create_or_update_article(db: Session, article_create: ArticleCreate):
         parser = ParserFactory.get_parser(article_create.url)
         try:
             parsed_data = await parser.parse(article_create.url)
-        except Exception as e:
-            raise Exception(f"Failed to parse article: {str(e)}")
+        except (ValueError, ConnectionError, ParserError) as e:
+            raise ParsingError(f"Failed to parse article: {str(e)}")
 
         # Check if article exists
         result = await db.execute(select(Article).where(Article.url == article_create.url))
