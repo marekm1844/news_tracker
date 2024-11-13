@@ -1,12 +1,14 @@
 from newspaper import Article as NewsArticle
 from typing import Dict
 from .base_parser import BaseParser
+import asyncio
 
 class GenericParser(BaseParser):
-    def parse(self, url: str) -> Dict[str, str]:
+    async def parse(self, url: str) -> Dict[str, str]:
+        loop = asyncio.get_event_loop()
         news_article = NewsArticle(url)
-        news_article.download()
-        news_article.parse()
+        await loop.run_in_executor(None, news_article.download)
+        await loop.run_in_executor(None, news_article.parse)
 
         return {
             'title': news_article.title,

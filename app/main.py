@@ -1,9 +1,11 @@
 from fastapi import FastAPI
+import uvicorn
 from .routers import articles
 from .database import engine, Base
-
+import asyncio
 # Create all tables
-Base.metadata.create_all(bind=engine)
+# Note: For async engine, you need to use an async context
+
 
 app = FastAPI(
     title="News Tracker API",
@@ -11,4 +13,9 @@ app = FastAPI(
     version="0.1.0",
 )
 
+@app.on_event("startup")
+async def startup():
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+        
 app.include_router(articles.router)

@@ -9,7 +9,7 @@ readme = "README.md"
 python = "^3.13"
 fastapi = "^0.115.4"
 uvicorn = "^0.32.0"
-sqlalchemy = "^2.0.36"
+sqlalchemy = {extras = ["asyncio"], version = "^2.0.36"}
 alembic = "^1.14.0"
 psycopg2-binary = "^2.9.10"
 pydantic = "^2.9.2"
@@ -19,6 +19,7 @@ newspaper3k = "^0.2.8"
 lxml-html-clean = "^0.3.1"
 beautifulsoup4 = "^4.12.3"
 simplediff = "^1.1"
+asyncpg = "^0.30.0"
 
 
 [build-system]

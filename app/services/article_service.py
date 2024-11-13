@@ -6,29 +6,32 @@ from ..models.article_version import ArticleVersion
 from ..schemas.article import ArticleCreate
 from .parsers.parser_factory import ParserFactory
 from ..utils.diff_utils import compare_versions
-
+from sqlalchemy import select
 class ArticleService:
     @staticmethod
-    def create_or_update_article(db: Session, article_create: ArticleCreate):
+    async def create_or_update_article(db: Session, article_create: ArticleCreate):
         parser = ParserFactory.get_parser(article_create.url)
         try:
-            parsed_data = parser.parse(article_create.url)
+            parsed_data = await parser.parse(article_create.url)
         except Exception as e:
             raise Exception(f"Failed to parse article: {str(e)}")
 
         # Check if article exists
-        db_article = db.query(Article).filter(Article.url == article_create.url).first()
+        result = await db.execute(select(Article).where(Article.url == article_create.url))
+        db_article = result.scalars().first()
+
         if not db_article:
             # Create new article
             db_article = Article(url=article_create.url)
             db.add(db_article)
-            db.commit()
-            db.refresh(db_article)
+            await db.commit()
+            await db.refresh(db_article)
 
         # Get the latest version
-        latest_version = db.query(ArticleVersion).filter(
+        result = await db.execute(select(ArticleVersion).where(
             ArticleVersion.article_id == db_article.id
-        ).order_by(ArticleVersion.created_at.desc()).first()
+        ).order_by(ArticleVersion.created_at.desc()))
+        latest_version = result.scalars().first()
 
         # Check if content has changed
         content_changed = True
@@ -51,15 +54,16 @@ class ArticleService:
                 diff=diff_html
             )
             db.add(new_version)
-            db.commit()
-            db.refresh(new_version)
+            await db.commit()
+            await db.refresh(new_version)
             return new_version  # Return the new version
         else:
             # No content change, return the latest version
             return latest_version
 
     @staticmethod
-    def get_article_versions(db: Session, article_id: int):
-        return db.query(ArticleVersion).filter(
+    async def get_article_versions(db: Session, article_id: int):
+        result = await db.execute(select(ArticleVersion).where(
             ArticleVersion.article_id == article_id
-        ).order_by(ArticleVersion.created_at.desc()).all()
+        ).order_by(ArticleVersion.created_at.desc()))
+        return result.scalars().all()
