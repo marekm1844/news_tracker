@@ -76,3 +76,25 @@ class ArticleService:
             ArticleVersion.article_id == article_id
         ).order_by(ArticleVersion.created_at.desc()))
         return result.scalars().all()
+    
+    @staticmethod
+    async def get_article(db: Session, article_id: int):
+        # Get the article version by its ID and join with the article
+        result = await db.execute(
+            select(Article, ArticleVersion)
+            .join(ArticleVersion, Article.id == ArticleVersion.article_id)
+            .where(ArticleVersion.id == article_id)
+        )
+        
+        row = result.first()
+        if not row:
+            return None
+            
+        article, version = row
+        
+        # Update article attributes from the version to match schema
+        article.title = version.title
+        article.content = version.content
+        article.created_at = version.created_at
+        
+        return article
