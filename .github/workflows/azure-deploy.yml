@@ -66,9 +66,3 @@ jobs:
                 "value": "sh startup.sh"
               }
             ]
-
-      - name: Run database migrations
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-        run: |
-          poetry run alembic upgrade head
