@@ -6,7 +6,7 @@ authors = ["Marek Majdak <22301547+marekm1844@users.noreply.github.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.13"
+python = "^3.12"
 fastapi = "^0.115.4"
 uvicorn = "^0.32.0"
 sqlalchemy = {extras = ["asyncio"], version = "^2.0.36"}
