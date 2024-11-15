@@ -44,3 +44,11 @@ async def startup():
         
 app.include_router(articles.router)
 scheduler = start_scheduler()
+
+if __name__ == "__main__":
+    uvicorn.run(
+        "app.main:app",
+        host="0.0.0.0",
+        port=8000,
+        reload=True
+    )

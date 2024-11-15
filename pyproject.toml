@@ -21,6 +21,7 @@ beautifulsoup4 = "^4.12.3"
 simplediff = "^1.1"
 asyncpg = "^0.30.0"
 apscheduler = "^3.10.4"
+gunicorn = "^23.0.0"
 
 
 [build-system]
