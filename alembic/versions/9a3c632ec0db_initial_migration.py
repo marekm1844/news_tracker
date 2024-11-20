@@ -1,8 +1,8 @@
-"""Make diff column nullable
+"""Initial migration
 
-Revision ID: bc063ddc4668
-Revises: c36fd63bc7de
-Create Date: 2024-11-12 17:57:13.801137
+Revision ID: 9a3c632ec0db
+Revises: 
+Create Date: 2024-11-20 17:01:45.610182
 
 """
 from typing import Sequence, Union
@@ -12,8 +12,8 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision: str = 'bc063ddc4668'
-down_revision: Union[str, None] = 'c36fd63bc7de'
+revision: str = '9a3c632ec0db'
+down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
