@@ -5,9 +5,11 @@ from .database import engine, Base
 import asyncio
 from .scheduler import start_scheduler
 from fastapi.middleware.cors import CORSMiddleware
-# Create all tables
-# Note: For async engine, you need to use an async context
+from sqlalchemy import inspect, text
+from sqlalchemy.ext.asyncio import AsyncSession
+import logging
 
+logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title="News Tracker API",
@@ -39,9 +41,14 @@ app.add_middleware(
 
 @app.on_event("startup")
 async def startup():
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-        
+    logger.info("Application starting up...")
+    # Any other startup logic you need (not related to DB creation)
+
+@app.on_event("shutdown")
+async def shutdown():
+    logger.info("Application shutting down...")
+    # Any cleanup logic you need
+
 app.include_router(articles.router)
 scheduler = start_scheduler()
 
