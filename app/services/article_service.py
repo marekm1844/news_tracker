@@ -6,8 +6,10 @@ from ..models.article_version import ArticleVersion
 from ..schemas.article import ArticleCreate
 from .parsers.parser_factory import ParserFactory
 from ..utils.diff_utils import compare_versions
-from sqlalchemy import select
+from sqlalchemy import select, desc
 from ..exeptions.parser_error import ParsingError
+from fastapi import HTTPException
+from .parsers.base_parser import ParserError
 
 class ArticleService:
     @staticmethod
@@ -19,11 +21,18 @@ class ArticleService:
         return ArticleVersion 
     @staticmethod
     async def create_or_update_article(db: Session, article_create: ArticleCreate):
-        parser = ParserFactory.get_parser(article_create.url)
         try:
+            parser = ParserFactory.get_parser(article_create.url)
             parsed_data = await parser.parse(article_create.url)
+        except AttributeError as e:
+            if "find_all" in str(e):
+                raise HTTPException(
+                    status_code=422,
+                    detail="Unable to parse article content. The article structure might have changed or is not supported."
+                )
+            raise HTTPException(status_code=400, detail=str(e))
         except (ValueError, ConnectionError, ParserError) as e:
-            raise ParsingError(f"Failed to parse article: {str(e)}")
+            raise HTTPException(status_code=400, detail=str(e))
 
         # Check if article exists
         result = await db.execute(select(Article).where(Article.url == article_create.url))
@@ -98,3 +107,41 @@ class ArticleService:
         article.created_at = version.created_at
         
         return article
+
+    @staticmethod
+    async def get_articles(db: Session, skip: int = 0, limit: int = 100):
+        """Get multiple articles with pagination"""
+        async with db as session:
+            # Get articles and their latest versions
+            query = (
+                select(Article, ArticleVersion)
+                .join(ArticleVersion, Article.id == ArticleVersion.article_id)
+                .order_by(Article.id, ArticleVersion.created_at.desc())
+                .distinct(Article.id)
+                .offset(skip)
+                .limit(limit)
+            )
+            result = await session.execute(query)
+            
+            articles = []
+            for article, version in result:
+                # Update article with version data
+                article.title = version.title
+                article.content = version.content 
+                article.created_at = version.created_at
+                articles.append(article)
+                
+            return articles
+
+    @staticmethod
+    async def get_latest_version(db: Session, article_id: int):
+        """Get the latest version of a specific article"""
+        async with db as session:
+            query = select(ArticleVersion)\
+                .where(ArticleVersion.article_id == article_id)\
+                .order_by(desc(ArticleVersion.created_at))\
+                .limit(1)
+            result = await session.execute(query)
+            return result.scalar_one_or_none()
+
+   

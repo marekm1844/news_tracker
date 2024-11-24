@@ -7,6 +7,7 @@ from typing import List
 from ..models.article_version import ArticleVersion
 from ..schemas.article_version import ArticleVersionResponse
 
+
 router = APIRouter(
     prefix="/articles",
     tags=["articles"],
@@ -159,3 +160,14 @@ async def read_version_diff(
         raise HTTPException(status_code=404, detail="Version not found")
 
     return version.diff
+
+@router.get("/{article_id}/latest_version", response_model=ArticleVersionResponse)
+async def read_latest_version(
+    article_id: int,
+    db: Session = Depends(get_db)
+):
+    """Get the latest version of a specific article"""
+    version = await ArticleService.get_latest_version(db, article_id)
+    if version is None:
+        raise HTTPException(status_code=404, detail="Article version not found")
+    return version

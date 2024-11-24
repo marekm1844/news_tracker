@@ -1,5 +1,5 @@
 from bs4 import BeautifulSoup
-from .base_parser import BaseParser
+from .base_parser import BaseParser, ParserError
 from typing import Dict
 import requests
 from urllib.parse import urlparse
